@@ -59,9 +59,6 @@ public class GCMServer {
         connection.sendPacket(request);
     }
 
-
-
-
     /**
      * Connects to GCM Cloud Connection Server using the supplied credentials.
      */
