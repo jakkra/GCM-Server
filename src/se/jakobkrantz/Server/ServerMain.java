@@ -8,11 +8,11 @@ import java.util.Map;
 public class ServerMain {
 
     public static void main(String[] args) throws Exception {
-        final String projectId = "1234567890"; //GCM sender id
-        final String apiKey = "API key"; // google servers not working so can't retrieve one
+        final String projectId = "24223089278";
+        final String apiKey = "AIzaSyCc16CWdJ9bAGpRto4FeIOceJlDWyV6LQo";
         JsonMessages jsonMessages = new JsonMessages();
-        GCMServer gcmServer = GCMServer.prepareClient(projectId, apiKey, true);
-        gcmServer.connect();
+        GCMServer gcmServer = GCMServer.prepareClient(projectId, apiKey);
+        gcmServer.connect(true);
 
         // Send a sample hello downstream message to a device.
 //        String toRegId = "RegistrationIdOfTheTargetDevice";

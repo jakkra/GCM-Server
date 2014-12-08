@@ -20,15 +20,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Sample Smack implementation of a client for GCM Cloud Connection Server. This
- * code can be run as a standalone CCS client.
- * <p/>
- * <p>For illustration purposes only.
- */
 public class GCMServer {
 
-    private static final Logger logger = Logger.getLogger("SmackCcsClient");
+    private static final Logger logger = Logger.getLogger("GCMServer");
 
     private static final String GCM_SERVER = "gcm.googleapis.com";
     private static final int GCM_PORT = 5236; //TODO Should change to 5235 when testing done
@@ -36,7 +30,6 @@ public class GCMServer {
     private static GCMServer sInstance;
     private String projectId;
     private String apiKey;
-    private boolean debuggable;
 
     private XMPPConnection connection;
 
@@ -72,13 +65,14 @@ public class GCMServer {
     /**
      * Connects to GCM Cloud Connection Server using the supplied credentials.
      */
-    public void connect() throws XMPPException, IOException, SmackException {
+    public void connect(boolean debug) throws XMPPException, IOException, SmackException {
         ConnectionConfiguration config = new ConnectionConfiguration(GCM_SERVER, GCM_PORT);
         config.setSecurityMode(SecurityMode.enabled);
         config.setReconnectionAllowed(true);
         config.setRosterLoadedAtLogin(false);
         config.setSendPresence(false);
         config.setSocketFactory(SSLSocketFactory.getDefault());
+        config.setDebuggerEnabled(debug);
 
         connection = new XMPPTCPConnection(config);
         connection.connect();
@@ -106,20 +100,19 @@ public class GCMServer {
         return sInstance;
     }
 
-    public static GCMServer prepareClient(String projectId, String apiKey, boolean debuggable) {
+    public static GCMServer prepareClient(String projectId, String apiKey) {
         synchronized (GCMServer.class) {
             if (sInstance == null) {
-                sInstance = new GCMServer(projectId, apiKey, debuggable);
+                sInstance = new GCMServer(projectId, apiKey);
             }
         }
         return sInstance;
     }
 
-    private GCMServer(String projectId, String apiKey, boolean debuggable) {
+    private GCMServer(String projectId, String apiKey) {
         this();
         this.apiKey = apiKey;
         this.projectId = projectId;
-        this.debuggable = debuggable;
     }
 
     private GCMServer() {
