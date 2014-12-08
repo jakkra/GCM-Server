@@ -1,4 +1,4 @@
-package se.jakobkrantz.Server;/*
+package se.jakobkrantz.Server.server;/*
  * Created by krantz on 14-12-08.
  */
 
@@ -6,6 +6,7 @@ import org.jivesoftware.smack.packet.DefaultPacketExtension;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.util.StringUtils;
+import se.jakobkrantz.Server.Constants;
 
 /**
  * XMPP Packet Extension for GCM Cloud Connection Server.

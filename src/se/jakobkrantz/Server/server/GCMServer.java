@@ -1,4 +1,4 @@
-package se.jakobkrantz.Server;/*
+package se.jakobkrantz.Server.server;/*
  * Created by krantz on 14-12-08.
  */
 
@@ -13,6 +13,7 @@ import org.jivesoftware.smack.provider.PacketExtensionProvider;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.xmlpull.v1.XmlPullParser;
+import se.jakobkrantz.Server.Constants;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;

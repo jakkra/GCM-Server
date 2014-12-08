@@ -1,4 +1,4 @@
-package se.jakobkrantz.Server;/*
+package se.jakobkrantz.Server.server;/*
  * Created by krantz on 14-12-08.
  */
 
@@ -8,6 +8,7 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
+import se.jakobkrantz.Server.Constants;
 
 import java.util.Map;
 import java.util.logging.Level;
