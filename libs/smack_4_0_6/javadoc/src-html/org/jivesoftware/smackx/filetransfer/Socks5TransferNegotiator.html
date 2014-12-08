@@ -1,0 +1,242 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/**<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Copyright the original author or authors<a name="line.3"></a>
+<span class="sourceLineNo">004</span> *<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * you may not use this file except in compliance with the License.<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *     http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.jivesoftware.smackx.filetransfer;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.io.IOException;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.io.InputStream;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.io.OutputStream;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.io.PushbackInputStream;<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.jivesoftware.smack.SmackException;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.jivesoftware.smack.SmackException.NoResponseException;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.jivesoftware.smack.XMPPConnection;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.jivesoftware.smack.XMPPException;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.jivesoftware.smack.XMPPException.XMPPErrorException;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.jivesoftware.smack.filter.AndFilter;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.jivesoftware.smack.filter.FromMatchesFilter;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.jivesoftware.smack.filter.PacketFilter;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.jivesoftware.smack.filter.PacketTypeFilter;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.jivesoftware.smack.packet.IQ;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.jivesoftware.smack.packet.Packet;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamManager;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamRequest;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import org.jivesoftware.smackx.bytestreams.socks5.Socks5BytestreamSession;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import org.jivesoftware.smackx.bytestreams.socks5.packet.Bytestream;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import org.jivesoftware.smackx.si.packet.StreamInitiation;<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>/**<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * Negotiates a SOCKS5 Bytestream to be used for file transfers. The implementation is based on the<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * {@link Socks5BytestreamManager} and the {@link Socks5BytestreamRequest}.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * <a name="line.44"></a>
+<span class="sourceLineNo">045</span> * @author Henning Staib<a name="line.45"></a>
+<span class="sourceLineNo">046</span> * @see &lt;a href="http://xmpp.org/extensions/xep-0065.html"&gt;XEP-0065: SOCKS5 Bytestreams&lt;/a&gt;<a name="line.46"></a>
+<span class="sourceLineNo">047</span> */<a name="line.47"></a>
+<span class="sourceLineNo">048</span>public class Socks5TransferNegotiator extends StreamNegotiator {<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>    private XMPPConnection connection;<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>    private Socks5BytestreamManager manager;<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>    Socks5TransferNegotiator(XMPPConnection connection) {<a name="line.54"></a>
+<span class="sourceLineNo">055</span>        this.connection = connection;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>        this.manager = Socks5BytestreamManager.getBytestreamManager(this.connection);<a name="line.56"></a>
+<span class="sourceLineNo">057</span>    }<a name="line.57"></a>
+<span class="sourceLineNo">058</span><a name="line.58"></a>
+<span class="sourceLineNo">059</span>    @Override<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    public OutputStream createOutgoingStream(String streamID, String initiator, String target) throws NoResponseException, SmackException, XMPPException<a name="line.60"></a>
+<span class="sourceLineNo">061</span>                    {<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        try {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>            return this.manager.establishSession(target, streamID).getOutputStream();<a name="line.63"></a>
+<span class="sourceLineNo">064</span>        }<a name="line.64"></a>
+<span class="sourceLineNo">065</span>        catch (IOException e) {<a name="line.65"></a>
+<span class="sourceLineNo">066</span>            throw new SmackException("error establishing SOCKS5 Bytestream", e);<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        }<a name="line.67"></a>
+<span class="sourceLineNo">068</span>        catch (InterruptedException e) {<a name="line.68"></a>
+<span class="sourceLineNo">069</span>            throw new SmackException("error establishing SOCKS5 Bytestream", e);<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        }<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    }<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>    @Override<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    public InputStream createIncomingStream(StreamInitiation initiation) throws XMPPErrorException,<a name="line.74"></a>
+<span class="sourceLineNo">075</span>                    InterruptedException, SmackException {<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        /*<a name="line.76"></a>
+<span class="sourceLineNo">077</span>         * SOCKS5 initiation listener must ignore next SOCKS5 Bytestream request with given session<a name="line.77"></a>
+<span class="sourceLineNo">078</span>         * ID<a name="line.78"></a>
+<span class="sourceLineNo">079</span>         */<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        this.manager.ignoreBytestreamRequestOnce(initiation.getSessionID());<a name="line.80"></a>
+<span class="sourceLineNo">081</span><a name="line.81"></a>
+<span class="sourceLineNo">082</span>        Packet streamInitiation = initiateIncomingStream(this.connection, initiation);<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        return negotiateIncomingStream(streamInitiation);<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    }<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>    @Override<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    public PacketFilter getInitiationPacketFilter(final String from, String streamID) {<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        /*<a name="line.88"></a>
+<span class="sourceLineNo">089</span>         * this method is always called prior to #negotiateIncomingStream() so the SOCKS5<a name="line.89"></a>
+<span class="sourceLineNo">090</span>         * InitiationListener must ignore the next SOCKS5 Bytestream request with the given session<a name="line.90"></a>
+<span class="sourceLineNo">091</span>         * ID<a name="line.91"></a>
+<span class="sourceLineNo">092</span>         */<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        this.manager.ignoreBytestreamRequestOnce(streamID);<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>        return new AndFilter(FromMatchesFilter.create(from), new BytestreamSIDFilter(streamID));<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    }<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    @Override<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    public String[] getNamespaces() {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        return new String[] { Socks5BytestreamManager.NAMESPACE };<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    }<a name="line.101"></a>
+<span class="sourceLineNo">102</span><a name="line.102"></a>
+<span class="sourceLineNo">103</span>    @Override<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    InputStream negotiateIncomingStream(Packet streamInitiation) throws InterruptedException,<a name="line.104"></a>
+<span class="sourceLineNo">105</span>                    SmackException, XMPPErrorException {<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        // build SOCKS5 Bytestream request<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        Socks5BytestreamRequest request = new ByteStreamRequest(this.manager,<a name="line.107"></a>
+<span class="sourceLineNo">108</span>                        (Bytestream) streamInitiation);<a name="line.108"></a>
+<span class="sourceLineNo">109</span><a name="line.109"></a>
+<span class="sourceLineNo">110</span>        // always accept the request<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        Socks5BytestreamSession session = request.accept();<a name="line.111"></a>
+<span class="sourceLineNo">112</span><a name="line.112"></a>
+<span class="sourceLineNo">113</span>        // test input stream<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        try {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>            PushbackInputStream stream = new PushbackInputStream(session.getInputStream());<a name="line.115"></a>
+<span class="sourceLineNo">116</span>            int firstByte = stream.read();<a name="line.116"></a>
+<span class="sourceLineNo">117</span>            stream.unread(firstByte);<a name="line.117"></a>
+<span class="sourceLineNo">118</span>            return stream;<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        }<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        catch (IOException e) {<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            throw new SmackException("Error establishing input stream", e);<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        }<a name="line.122"></a>
+<span class="sourceLineNo">123</span>    }<a name="line.123"></a>
+<span class="sourceLineNo">124</span><a name="line.124"></a>
+<span class="sourceLineNo">125</span>    @Override<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    public void cleanup() {<a name="line.126"></a>
+<span class="sourceLineNo">127</span>        /* do nothing */<a name="line.127"></a>
+<span class="sourceLineNo">128</span>    }<a name="line.128"></a>
+<span class="sourceLineNo">129</span><a name="line.129"></a>
+<span class="sourceLineNo">130</span>    /**<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * This PacketFilter accepts an incoming SOCKS5 Bytestream request with a specified session ID.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     */<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    private static class BytestreamSIDFilter extends PacketTypeFilter {<a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134"></a>
+<span class="sourceLineNo">135</span>        private String sessionID;<a name="line.135"></a>
+<span class="sourceLineNo">136</span><a name="line.136"></a>
+<span class="sourceLineNo">137</span>        public BytestreamSIDFilter(String sessionID) {<a name="line.137"></a>
+<span class="sourceLineNo">138</span>            super(Bytestream.class);<a name="line.138"></a>
+<span class="sourceLineNo">139</span>            if (sessionID == null) {<a name="line.139"></a>
+<span class="sourceLineNo">140</span>                throw new IllegalArgumentException("StreamID cannot be null");<a name="line.140"></a>
+<span class="sourceLineNo">141</span>            }<a name="line.141"></a>
+<span class="sourceLineNo">142</span>            this.sessionID = sessionID;<a name="line.142"></a>
+<span class="sourceLineNo">143</span>        }<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>        @Override<a name="line.145"></a>
+<span class="sourceLineNo">146</span>        public boolean accept(Packet packet) {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>            if (super.accept(packet)) {<a name="line.147"></a>
+<span class="sourceLineNo">148</span>                Bytestream bytestream = (Bytestream) packet;<a name="line.148"></a>
+<span class="sourceLineNo">149</span><a name="line.149"></a>
+<span class="sourceLineNo">150</span>                // packet must by of type SET and contains the given session ID<a name="line.150"></a>
+<span class="sourceLineNo">151</span>                return this.sessionID.equals(bytestream.getSessionID())<a name="line.151"></a>
+<span class="sourceLineNo">152</span>                                &amp;&amp; IQ.Type.SET.equals(bytestream.getType());<a name="line.152"></a>
+<span class="sourceLineNo">153</span>            }<a name="line.153"></a>
+<span class="sourceLineNo">154</span>            return false;<a name="line.154"></a>
+<span class="sourceLineNo">155</span>        }<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>    }<a name="line.157"></a>
+<span class="sourceLineNo">158</span><a name="line.158"></a>
+<span class="sourceLineNo">159</span>    /**<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     * Derive from Socks5BytestreamRequest to access protected constructor.<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     */<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    private static class ByteStreamRequest extends Socks5BytestreamRequest {<a name="line.162"></a>
+<span class="sourceLineNo">163</span><a name="line.163"></a>
+<span class="sourceLineNo">164</span>        private ByteStreamRequest(Socks5BytestreamManager manager, Bytestream byteStreamRequest) {<a name="line.164"></a>
+<span class="sourceLineNo">165</span>            super(manager, byteStreamRequest);<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        }<a name="line.166"></a>
+<span class="sourceLineNo">167</span><a name="line.167"></a>
+<span class="sourceLineNo">168</span>    }<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>}<a name="line.170"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

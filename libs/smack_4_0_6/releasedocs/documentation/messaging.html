@@ -1,0 +1,39 @@
+<h1>Messaging using Chats</h1><p><a href="index.html">Back</a></p><p>Sending messages back and forth is at the core of instant messaging. Although individual messages can be sent and received as packets, it's generally easier to treat the string of messages as a chat using the <code>org.jivesoftware.smack.Chat</code> class.</p><h2>Chat</h2><p>A chat creates a new thread of messages (using a thread ID) between two users. The following code snippet demonstrates how to create a new Chat with a user and then send them a text message:</p>
+<pre><code>// Assume we&#39;ve created a XMPPConnection name &quot;connection&quot;._
+ChatManager chatmanager = connection.getChatManager();
+Chat newChat = chatmanager.createChat(&quot;jsmith@jivesoftware.com&quot;, new MessageListener() {
+	public void processMessage(Chat chat, Message message) {
+		System.out.println(&quot;Received message: &quot; + message);
+	}
+});
+
+try {
+	newChat.sendMessage(&quot;Howdy!&quot;);
+}
+catch (XMPPException e) {
+	System.out.println(&quot;Error Delivering block&quot;);
+}
+</code></pre><p>The <code>Chat.sendMessage(String)</code> method is a convenience method that creates a Message object, sets the body using the String parameter, then sends the message. In the case that you wish to set additional values on a Message before sending it, use the <code>Chat.createMessage()</code> and <code>Chat.sendMessage(Message)</code> methods, as in the following code snippet:</p>
+<pre><code>Message newMessage = new Message();
+newMessage.setBody(&quot;Howdy!&quot;);
+message.setProperty(&quot;favoriteColor&quot;, &quot;red&quot;);
+newChat.sendMessage(newMessage);
+</code></pre><p>You'll also notice in the example above that we specified a MessageListener when creating a chat. The listener is notified any time a new message arrives from the other user in the chat. The following code snippet uses the listener as a parrot-bot -- it echoes back everything the other user types.</p>
+<pre><code>// Assume a MessageListener we&#39;ve setup with a chat._
+
+public void processMessage(Chat chat, Message message) {
+		// Send back the same text the other user sent us._
+		chat.sendMessage(message.getBody());
+}
+</code></pre><h2>Incoming Chat</h2><p>When chats are prompted by another user, the setup is slightly different since you are receiving a chat message first. Instead of explicitly creating a chat to send messages, you need to register to handle newly created Chat instances when the ChatManager creates them. The ChatManager will already find a matching chat (by thread id) and if none exists, then it will create a new one that does match. To get this new chat, you have to register to be notified when it happens. You can register a message listener to receive all future messages as part of this handler.</p>
+<pre><code>_// Assume we&#39;ve created a XMPPConnection name &quot;connection&quot;._
+ChatManager chatmanager = connection.getChatManager().addChatListener(
+	new ChatManagerListener() {
+		@Override
+		public void chatCreated(Chat chat, boolean createdLocally)
+		{
+			if (!createdLocally)
+				chat.addMessageListener(new MyNewMessageListener());;
+		}
+	});
+</code></pre><p>In addition to thread based chat messages, there are some clients that do not send a thread id as part of the chat. To handle this scenario, Smack will attempt match the incoming messages to the best fit existing chat, based on the JID. It will attempt to find a chat with the same full JID, failing that, it will try the base JID. If no existing chat to the user can found, then a new one is created.</p><p>Copyright (C) Jive Software 2002-2008</p>

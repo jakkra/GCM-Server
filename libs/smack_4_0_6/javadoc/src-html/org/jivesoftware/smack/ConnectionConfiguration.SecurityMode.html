@@ -1,0 +1,685 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/**<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Copyright 2003-2007 Jive Software.<a name="line.3"></a>
+<span class="sourceLineNo">004</span> *<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * you may not use this file except in compliance with the License.<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *     http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * See the License for the specific language governing permissions and<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>package org.jivesoftware.smack;<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.jivesoftware.smack.packet.Session;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.jivesoftware.smack.proxy.ProxyInfo;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.jivesoftware.smack.util.DNSUtil;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.jivesoftware.smack.util.StringUtils;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.jivesoftware.smack.util.dns.HostAddress;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>import javax.net.SocketFactory;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import javax.net.ssl.HostnameVerifier;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import javax.net.ssl.SSLContext;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import javax.security.auth.callback.CallbackHandler;<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>import java.util.ArrayList;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import java.util.Collections;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import java.util.List;<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>/**<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * Configuration to use while establishing the connection to the server. It is possible to<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * configure the path to the trustore file that keeps the trusted CA root certificates and<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * enable or disable all or some of the checkings done while verifying server certificates.&lt;p&gt;<a name="line.38"></a>
+<span class="sourceLineNo">039</span> *<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * It is also possible to configure if TLS, SASL, and compression are used or not.<a name="line.40"></a>
+<span class="sourceLineNo">041</span> *<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * @author Gaston Dombiak<a name="line.42"></a>
+<span class="sourceLineNo">043</span> */<a name="line.43"></a>
+<span class="sourceLineNo">044</span>public class ConnectionConfiguration implements Cloneable {<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>    /**<a name="line.46"></a>
+<span class="sourceLineNo">047</span>     * Hostname of the XMPP server. Usually servers use the same service name as the name<a name="line.47"></a>
+<span class="sourceLineNo">048</span>     * of the server. However, there are some servers like google where host would be<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     * talk.google.com and the serviceName would be gmail.com.<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     */<a name="line.50"></a>
+<span class="sourceLineNo">051</span>    private String serviceName;<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>    protected List&lt;HostAddress&gt; hostAddresses;<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    private String keystorePath;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    private String keystoreType;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>    private String pkcs11Library;<a name="line.57"></a>
+<span class="sourceLineNo">058</span>    private SSLContext customSSLContext;<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>    private boolean compressionEnabled = false;<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>    /**<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * Used to get information from the user<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     */<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    private CallbackHandler callbackHandler;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    private boolean debuggerEnabled = SmackConfiguration.DEBUG_ENABLED;<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>    // Flag that indicates if a reconnection should be attempted when abruptly disconnected<a name="line.69"></a>
+<span class="sourceLineNo">070</span>    private boolean reconnectionAllowed = true;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    <a name="line.71"></a>
+<span class="sourceLineNo">072</span>    // Holds the socket factory that is used to generate the socket in the connection<a name="line.72"></a>
+<span class="sourceLineNo">073</span>    private SocketFactory socketFactory;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    <a name="line.74"></a>
+<span class="sourceLineNo">075</span>    // Holds the authentication information for future reconnections<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    private String username;<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    private String password;<a name="line.77"></a>
+<span class="sourceLineNo">078</span>    private String resource;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    private boolean sendPresence = true;<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    private boolean rosterLoadedAtLogin = true;<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    private boolean legacySessionDisabled = false;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    private boolean useDnsSrvRr = true;<a name="line.82"></a>
+<span class="sourceLineNo">083</span>    private SecurityMode securityMode = SecurityMode.enabled;<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>    private HostnameVerifier hostnameVerifier;<a name="line.85"></a>
+<span class="sourceLineNo">086</span><a name="line.86"></a>
+<span class="sourceLineNo">087</span>    /**<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * Permanent store for the Roster, needed for roster versioning<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     */<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    private RosterStore rosterStore;<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    // Holds the proxy information (such as proxyhost, proxyport, username, password etc)<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    protected ProxyInfo proxy;<a name="line.93"></a>
+<span class="sourceLineNo">094</span><a name="line.94"></a>
+<span class="sourceLineNo">095</span>    /**<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * Creates a new ConnectionConfiguration for the specified service name.<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * A DNS SRV lookup will be performed to find out the actual host address<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * and port to use for the connection.<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     *<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * @param serviceName the name of the service provided by an XMPP server.<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    public ConnectionConfiguration(String serviceName) {<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        init(serviceName, ProxyInfo.forDefaultProxy());<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    }<a name="line.104"></a>
+<span class="sourceLineNo">105</span><a name="line.105"></a>
+<span class="sourceLineNo">106</span>     /**<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     * Creates a new ConnectionConfiguration for the specified service name <a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * with specified proxy.<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     * A DNS SRV lookup will be performed to find out the actual host address<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * and port to use for the connection.<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     *<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * @param serviceName the name of the service provided by an XMPP server.<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * @param proxy the proxy through which XMPP is to be connected<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     */<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    public ConnectionConfiguration(String serviceName,ProxyInfo proxy) {<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        init(serviceName, proxy);<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    }<a name="line.117"></a>
+<span class="sourceLineNo">118</span><a name="line.118"></a>
+<span class="sourceLineNo">119</span>    /**<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * Creates a new ConnectionConfiguration using the specified host, port and<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * service name. This is useful for manually overriding the DNS SRV lookup<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * process that's used with the {@link #ConnectionConfiguration(String)}<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * constructor. For example, say that an XMPP server is running at localhost<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * in an internal network on port 5222 but is configured to think that it's<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * "example.com" for testing purposes. This constructor is necessary to connect<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * to the server in that case since a DNS SRV lookup for example.com would not<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * point to the local testing server.<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     *<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * @param host the host where the XMPP server is running.<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * @param port the port where the XMPP is listening.<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * @param serviceName the name of the service provided by an XMPP server.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     */<a name="line.132"></a>
+<span class="sourceLineNo">133</span>    public ConnectionConfiguration(String host, int port, String serviceName) {<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        initHostAddresses(host, port);<a name="line.134"></a>
+<span class="sourceLineNo">135</span>        init(serviceName, ProxyInfo.forDefaultProxy());<a name="line.135"></a>
+<span class="sourceLineNo">136</span>    }<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        <a name="line.137"></a>
+<span class="sourceLineNo">138</span>        /**<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * Creates a new ConnectionConfiguration using the specified host, port and<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * service name. This is useful for manually overriding the DNS SRV lookup<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * process that's used with the {@link #ConnectionConfiguration(String)}<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * constructor. For example, say that an XMPP server is running at localhost<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * in an internal network on port 5222 but is configured to think that it's<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * "example.com" for testing purposes. This constructor is necessary to connect<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     * to the server in that case since a DNS SRV lookup for example.com would not<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * point to the local testing server.<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     *<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * @param host the host where the XMPP server is running.<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * @param port the port where the XMPP is listening.<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * @param serviceName the name of the service provided by an XMPP server.<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * @param proxy the proxy through which XMPP is to be connected<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     */<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    public ConnectionConfiguration(String host, int port, String serviceName, ProxyInfo proxy) {<a name="line.153"></a>
+<span class="sourceLineNo">154</span>        initHostAddresses(host, port);<a name="line.154"></a>
+<span class="sourceLineNo">155</span>        init(serviceName, proxy);<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    }<a name="line.156"></a>
+<span class="sourceLineNo">157</span><a name="line.157"></a>
+<span class="sourceLineNo">158</span>    /**<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * Creates a new ConnectionConfiguration for a connection that will connect<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     * to the desired host and port.<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     *<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * @param host the host where the XMPP server is running.<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * @param port the port where the XMPP is listening.<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     */<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    public ConnectionConfiguration(String host, int port) {<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        initHostAddresses(host, port);<a name="line.166"></a>
+<span class="sourceLineNo">167</span>        init(host, ProxyInfo.forDefaultProxy());<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    }<a name="line.168"></a>
+<span class="sourceLineNo">169</span>        <a name="line.169"></a>
+<span class="sourceLineNo">170</span>        /**<a name="line.170"></a>
+<span class="sourceLineNo">171</span>     * Creates a new ConnectionConfiguration for a connection that will connect<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * to the desired host and port with desired proxy.<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     *<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * @param host the host where the XMPP server is running.<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * @param port the port where the XMPP is listening.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * @param proxy the proxy through which XMPP is to be connected<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     */<a name="line.177"></a>
+<span class="sourceLineNo">178</span>    public ConnectionConfiguration(String host, int port, ProxyInfo proxy) {<a name="line.178"></a>
+<span class="sourceLineNo">179</span>        initHostAddresses(host, port);<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        init(host, proxy);<a name="line.180"></a>
+<span class="sourceLineNo">181</span>    }<a name="line.181"></a>
+<span class="sourceLineNo">182</span><a name="line.182"></a>
+<span class="sourceLineNo">183</span>    protected void init(String serviceName, ProxyInfo proxy) {<a name="line.183"></a>
+<span class="sourceLineNo">184</span>        if (StringUtils.isEmpty(serviceName)) {<a name="line.184"></a>
+<span class="sourceLineNo">185</span>            throw new IllegalArgumentException("serviceName must not be the empty String");<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        }<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        this.serviceName = serviceName;<a name="line.187"></a>
+<span class="sourceLineNo">188</span>        this.proxy = proxy;<a name="line.188"></a>
+<span class="sourceLineNo">189</span><a name="line.189"></a>
+<span class="sourceLineNo">190</span>        keystorePath = System.getProperty("javax.net.ssl.keyStore");<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        keystoreType = "jks";<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        pkcs11Library = "pkcs11.config";<a name="line.192"></a>
+<span class="sourceLineNo">193</span>                <a name="line.193"></a>
+<span class="sourceLineNo">194</span>                //Setting the SocketFactory according to proxy supplied<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        socketFactory = proxy.getSocketFactory();<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    }<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>    /**<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * Sets the server name, also known as XMPP domain of the target server.<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     *<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * @param serviceName the XMPP domain of the target server.<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     */<a name="line.202"></a>
+<span class="sourceLineNo">203</span>    void setServiceName(String serviceName) {<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        this.serviceName = serviceName;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    }<a name="line.205"></a>
+<span class="sourceLineNo">206</span><a name="line.206"></a>
+<span class="sourceLineNo">207</span>    /**<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * Returns the server name of the target server.<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     *<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * @return the server name of the target server.<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     */<a name="line.211"></a>
+<span class="sourceLineNo">212</span>    public String getServiceName() {<a name="line.212"></a>
+<span class="sourceLineNo">213</span>        return serviceName;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    }<a name="line.214"></a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span>    /**<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * Returns the TLS security mode used when making the connection. By default,<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * the mode is {@link SecurityMode#enabled}.<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     *<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * @return the security mode.<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     */<a name="line.221"></a>
+<span class="sourceLineNo">222</span>    public SecurityMode getSecurityMode() {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>        return securityMode;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>    }<a name="line.224"></a>
+<span class="sourceLineNo">225</span><a name="line.225"></a>
+<span class="sourceLineNo">226</span>    /**<a name="line.226"></a>
+<span class="sourceLineNo">227</span>     * Sets the TLS security mode used when making the connection. By default,<a name="line.227"></a>
+<span class="sourceLineNo">228</span>     * the mode is {@link SecurityMode#enabled}.<a name="line.228"></a>
+<span class="sourceLineNo">229</span>     *<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     * @param securityMode the security mode.<a name="line.230"></a>
+<span class="sourceLineNo">231</span>     */<a name="line.231"></a>
+<span class="sourceLineNo">232</span>    public void setSecurityMode(SecurityMode securityMode) {<a name="line.232"></a>
+<span class="sourceLineNo">233</span>        this.securityMode = securityMode;<a name="line.233"></a>
+<span class="sourceLineNo">234</span>    }<a name="line.234"></a>
+<span class="sourceLineNo">235</span><a name="line.235"></a>
+<span class="sourceLineNo">236</span>    /**<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * Retuns the path to the keystore file. The key store file contains the <a name="line.237"></a>
+<span class="sourceLineNo">238</span>     * certificates that may be used to authenticate the client to the server,<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     * in the event the server requests or requires it.<a name="line.239"></a>
+<span class="sourceLineNo">240</span>     *<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     * @return the path to the keystore file.<a name="line.241"></a>
+<span class="sourceLineNo">242</span>     */<a name="line.242"></a>
+<span class="sourceLineNo">243</span>    public String getKeystorePath() {<a name="line.243"></a>
+<span class="sourceLineNo">244</span>        return keystorePath;<a name="line.244"></a>
+<span class="sourceLineNo">245</span>    }<a name="line.245"></a>
+<span class="sourceLineNo">246</span><a name="line.246"></a>
+<span class="sourceLineNo">247</span>    /**<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     * Sets the path to the keystore file. The key store file contains the <a name="line.248"></a>
+<span class="sourceLineNo">249</span>     * certificates that may be used to authenticate the client to the server,<a name="line.249"></a>
+<span class="sourceLineNo">250</span>     * in the event the server requests or requires it.<a name="line.250"></a>
+<span class="sourceLineNo">251</span>     *<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     * @param keystorePath the path to the keystore file.<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     */<a name="line.253"></a>
+<span class="sourceLineNo">254</span>    public void setKeystorePath(String keystorePath) {<a name="line.254"></a>
+<span class="sourceLineNo">255</span>        this.keystorePath = keystorePath;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>    }<a name="line.256"></a>
+<span class="sourceLineNo">257</span><a name="line.257"></a>
+<span class="sourceLineNo">258</span>    /**<a name="line.258"></a>
+<span class="sourceLineNo">259</span>     * Returns the keystore type, or &lt;tt&gt;null&lt;/tt&gt; if it's not set.<a name="line.259"></a>
+<span class="sourceLineNo">260</span>     *<a name="line.260"></a>
+<span class="sourceLineNo">261</span>     * @return the keystore type.<a name="line.261"></a>
+<span class="sourceLineNo">262</span>     */<a name="line.262"></a>
+<span class="sourceLineNo">263</span>    public String getKeystoreType() {<a name="line.263"></a>
+<span class="sourceLineNo">264</span>        return keystoreType;<a name="line.264"></a>
+<span class="sourceLineNo">265</span>    }<a name="line.265"></a>
+<span class="sourceLineNo">266</span><a name="line.266"></a>
+<span class="sourceLineNo">267</span>    /**<a name="line.267"></a>
+<span class="sourceLineNo">268</span>     * Sets the keystore type.<a name="line.268"></a>
+<span class="sourceLineNo">269</span>     *<a name="line.269"></a>
+<span class="sourceLineNo">270</span>     * @param keystoreType the keystore type.<a name="line.270"></a>
+<span class="sourceLineNo">271</span>     */<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    public void setKeystoreType(String keystoreType) {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        this.keystoreType = keystoreType;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>    }<a name="line.274"></a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span><a name="line.276"></a>
+<span class="sourceLineNo">277</span>    /**<a name="line.277"></a>
+<span class="sourceLineNo">278</span>     * Returns the PKCS11 library file location, needed when the<a name="line.278"></a>
+<span class="sourceLineNo">279</span>     * Keystore type is PKCS11.<a name="line.279"></a>
+<span class="sourceLineNo">280</span>     *<a name="line.280"></a>
+<span class="sourceLineNo">281</span>     * @return the path to the PKCS11 library file<a name="line.281"></a>
+<span class="sourceLineNo">282</span>     */<a name="line.282"></a>
+<span class="sourceLineNo">283</span>    public String getPKCS11Library() {<a name="line.283"></a>
+<span class="sourceLineNo">284</span>        return pkcs11Library;<a name="line.284"></a>
+<span class="sourceLineNo">285</span>    }<a name="line.285"></a>
+<span class="sourceLineNo">286</span><a name="line.286"></a>
+<span class="sourceLineNo">287</span>    /**<a name="line.287"></a>
+<span class="sourceLineNo">288</span>     * Sets the PKCS11 library file location, needed when the<a name="line.288"></a>
+<span class="sourceLineNo">289</span>     * Keystore type is PKCS11<a name="line.289"></a>
+<span class="sourceLineNo">290</span>     *<a name="line.290"></a>
+<span class="sourceLineNo">291</span>     * @param pkcs11Library the path to the PKCS11 library file<a name="line.291"></a>
+<span class="sourceLineNo">292</span>     */<a name="line.292"></a>
+<span class="sourceLineNo">293</span>    public void setPKCS11Library(String pkcs11Library) {<a name="line.293"></a>
+<span class="sourceLineNo">294</span>        this.pkcs11Library = pkcs11Library;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>    }<a name="line.295"></a>
+<span class="sourceLineNo">296</span><a name="line.296"></a>
+<span class="sourceLineNo">297</span>    /**<a name="line.297"></a>
+<span class="sourceLineNo">298</span>     * Gets the custom SSLContext previously set with {@link #setCustomSSLContext(SSLContext)} for<a name="line.298"></a>
+<span class="sourceLineNo">299</span>     * SSL sockets. This is null by default.<a name="line.299"></a>
+<span class="sourceLineNo">300</span>     *<a name="line.300"></a>
+<span class="sourceLineNo">301</span>     * @return the custom SSLContext or null.<a name="line.301"></a>
+<span class="sourceLineNo">302</span>     */<a name="line.302"></a>
+<span class="sourceLineNo">303</span>    public SSLContext getCustomSSLContext() {<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        return this.customSSLContext;<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    }<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>    /**<a name="line.307"></a>
+<span class="sourceLineNo">308</span>     * Sets a custom SSLContext for creating SSL sockets.<a name="line.308"></a>
+<span class="sourceLineNo">309</span>     * &lt;p&gt;<a name="line.309"></a>
+<span class="sourceLineNo">310</span>     * For more information on how to create a SSLContext see &lt;a href=<a name="line.310"></a>
+<span class="sourceLineNo">311</span>     * "http://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#X509TrustManager"<a name="line.311"></a>
+<span class="sourceLineNo">312</span>     * &gt;Java Secure Socket Extension (JSEE) Reference Guide: Creating Your Own X509TrustManager&lt;/a&gt;<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     *<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * @param context the custom SSLContext for new sockets<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     */<a name="line.315"></a>
+<span class="sourceLineNo">316</span>    public void setCustomSSLContext(SSLContext context) {<a name="line.316"></a>
+<span class="sourceLineNo">317</span>        this.customSSLContext = context;<a name="line.317"></a>
+<span class="sourceLineNo">318</span>    }<a name="line.318"></a>
+<span class="sourceLineNo">319</span><a name="line.319"></a>
+<span class="sourceLineNo">320</span>    /**<a name="line.320"></a>
+<span class="sourceLineNo">321</span>     * Set the HostnameVerifier used to verify the hostname of SSLSockets used by XMPP connections<a name="line.321"></a>
+<span class="sourceLineNo">322</span>     * created with this ConnectionConfiguration.<a name="line.322"></a>
+<span class="sourceLineNo">323</span>     * <a name="line.323"></a>
+<span class="sourceLineNo">324</span>     * @param verifier<a name="line.324"></a>
+<span class="sourceLineNo">325</span>     */<a name="line.325"></a>
+<span class="sourceLineNo">326</span>    public void setHostnameVerifier(HostnameVerifier verifier) {<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        hostnameVerifier = verifier;<a name="line.327"></a>
+<span class="sourceLineNo">328</span>    }<a name="line.328"></a>
+<span class="sourceLineNo">329</span><a name="line.329"></a>
+<span class="sourceLineNo">330</span>    /**<a name="line.330"></a>
+<span class="sourceLineNo">331</span>     * Returns the configured HostnameVerifier of this ConnectionConfiguration or the Smack default<a name="line.331"></a>
+<span class="sourceLineNo">332</span>     * HostnameVerifier configured with<a name="line.332"></a>
+<span class="sourceLineNo">333</span>     * {@link SmackConfiguration#setDefaultHostnameVerifier(HostnameVerifier)}.<a name="line.333"></a>
+<span class="sourceLineNo">334</span>     * <a name="line.334"></a>
+<span class="sourceLineNo">335</span>     * @return a configured HostnameVerifier or &lt;code&gt;null&lt;/code&gt;<a name="line.335"></a>
+<span class="sourceLineNo">336</span>     */<a name="line.336"></a>
+<span class="sourceLineNo">337</span>    public HostnameVerifier getHostnameVerifier() {<a name="line.337"></a>
+<span class="sourceLineNo">338</span>        if (hostnameVerifier != null)<a name="line.338"></a>
+<span class="sourceLineNo">339</span>            return hostnameVerifier;<a name="line.339"></a>
+<span class="sourceLineNo">340</span>        return SmackConfiguration.getDefaultHostnameVerifier();<a name="line.340"></a>
+<span class="sourceLineNo">341</span>    }<a name="line.341"></a>
+<span class="sourceLineNo">342</span><a name="line.342"></a>
+<span class="sourceLineNo">343</span>    /**<a name="line.343"></a>
+<span class="sourceLineNo">344</span>     * Returns true if the connection is going to use stream compression. Stream compression<a name="line.344"></a>
+<span class="sourceLineNo">345</span>     * will be requested after TLS was established (if TLS was enabled) and only if the server<a name="line.345"></a>
+<span class="sourceLineNo">346</span>     * offered stream compression. With stream compression network traffic can be reduced<a name="line.346"></a>
+<span class="sourceLineNo">347</span>     * up to 90%. By default compression is disabled.<a name="line.347"></a>
+<span class="sourceLineNo">348</span>     *<a name="line.348"></a>
+<span class="sourceLineNo">349</span>     * @return true if the connection is going to use stream compression.<a name="line.349"></a>
+<span class="sourceLineNo">350</span>     */<a name="line.350"></a>
+<span class="sourceLineNo">351</span>    public boolean isCompressionEnabled() {<a name="line.351"></a>
+<span class="sourceLineNo">352</span>        return compressionEnabled;<a name="line.352"></a>
+<span class="sourceLineNo">353</span>    }<a name="line.353"></a>
+<span class="sourceLineNo">354</span><a name="line.354"></a>
+<span class="sourceLineNo">355</span>    /**<a name="line.355"></a>
+<span class="sourceLineNo">356</span>     * Sets if the connection is going to use stream compression. Stream compression<a name="line.356"></a>
+<span class="sourceLineNo">357</span>     * will be requested after TLS was established (if TLS was enabled) and only if the server<a name="line.357"></a>
+<span class="sourceLineNo">358</span>     * offered stream compression. With stream compression network traffic can be reduced<a name="line.358"></a>
+<span class="sourceLineNo">359</span>     * up to 90%. By default compression is disabled.<a name="line.359"></a>
+<span class="sourceLineNo">360</span>     *<a name="line.360"></a>
+<span class="sourceLineNo">361</span>     * @param compressionEnabled if the connection is going to use stream compression.<a name="line.361"></a>
+<span class="sourceLineNo">362</span>     */<a name="line.362"></a>
+<span class="sourceLineNo">363</span>    public void setCompressionEnabled(boolean compressionEnabled) {<a name="line.363"></a>
+<span class="sourceLineNo">364</span>        this.compressionEnabled = compressionEnabled;<a name="line.364"></a>
+<span class="sourceLineNo">365</span>    }<a name="line.365"></a>
+<span class="sourceLineNo">366</span><a name="line.366"></a>
+<span class="sourceLineNo">367</span>    /**<a name="line.367"></a>
+<span class="sourceLineNo">368</span>     * Returns true if the new connection about to be establish is going to be debugged. By<a name="line.368"></a>
+<span class="sourceLineNo">369</span>     * default the value of {@link SmackConfiguration#DEBUG_ENABLED} is used.<a name="line.369"></a>
+<span class="sourceLineNo">370</span>     *<a name="line.370"></a>
+<span class="sourceLineNo">371</span>     * @return true if the new connection about to be establish is going to be debugged.<a name="line.371"></a>
+<span class="sourceLineNo">372</span>     */<a name="line.372"></a>
+<span class="sourceLineNo">373</span>    public boolean isDebuggerEnabled() {<a name="line.373"></a>
+<span class="sourceLineNo">374</span>        return debuggerEnabled;<a name="line.374"></a>
+<span class="sourceLineNo">375</span>    }<a name="line.375"></a>
+<span class="sourceLineNo">376</span><a name="line.376"></a>
+<span class="sourceLineNo">377</span>    /**<a name="line.377"></a>
+<span class="sourceLineNo">378</span>     * Sets if the new connection about to be establish is going to be debugged. By<a name="line.378"></a>
+<span class="sourceLineNo">379</span>     * default the value of {@link SmackConfiguration#DEBUG_ENABLED} is used.<a name="line.379"></a>
+<span class="sourceLineNo">380</span>     *<a name="line.380"></a>
+<span class="sourceLineNo">381</span>     * @param debuggerEnabled if the new connection about to be establish is going to be debugged.<a name="line.381"></a>
+<span class="sourceLineNo">382</span>     */<a name="line.382"></a>
+<span class="sourceLineNo">383</span>    public void setDebuggerEnabled(boolean debuggerEnabled) {<a name="line.383"></a>
+<span class="sourceLineNo">384</span>        this.debuggerEnabled = debuggerEnabled;<a name="line.384"></a>
+<span class="sourceLineNo">385</span>    }<a name="line.385"></a>
+<span class="sourceLineNo">386</span>    <a name="line.386"></a>
+<span class="sourceLineNo">387</span>    /**<a name="line.387"></a>
+<span class="sourceLineNo">388</span>     * Sets if the reconnection mechanism is allowed to be used. By default<a name="line.388"></a>
+<span class="sourceLineNo">389</span>     * reconnection is allowed.<a name="line.389"></a>
+<span class="sourceLineNo">390</span>     *<a name="line.390"></a>
+<span class="sourceLineNo">391</span>     * @param isAllowed if the reconnection mechanism should be enabled for this connection.<a name="line.391"></a>
+<span class="sourceLineNo">392</span>     */<a name="line.392"></a>
+<span class="sourceLineNo">393</span>    public void setReconnectionAllowed(boolean isAllowed) {<a name="line.393"></a>
+<span class="sourceLineNo">394</span>        this.reconnectionAllowed = isAllowed;<a name="line.394"></a>
+<span class="sourceLineNo">395</span>    }<a name="line.395"></a>
+<span class="sourceLineNo">396</span><a name="line.396"></a>
+<span class="sourceLineNo">397</span>    /**<a name="line.397"></a>
+<span class="sourceLineNo">398</span>     * Returns if the reconnection mechanism is allowed to be used. By default reconnection is<a name="line.398"></a>
+<span class="sourceLineNo">399</span>     * allowed. You can disable the reconnection mechanism with {@link<a name="line.399"></a>
+<span class="sourceLineNo">400</span>     * #setReconnectionAllowed(boolean)}.<a name="line.400"></a>
+<span class="sourceLineNo">401</span>     *<a name="line.401"></a>
+<span class="sourceLineNo">402</span>     * @return true, if the reconnection mechanism is enabled.<a name="line.402"></a>
+<span class="sourceLineNo">403</span>     */<a name="line.403"></a>
+<span class="sourceLineNo">404</span>    public boolean isReconnectionAllowed() {<a name="line.404"></a>
+<span class="sourceLineNo">405</span>        return this.reconnectionAllowed;<a name="line.405"></a>
+<span class="sourceLineNo">406</span>    }<a name="line.406"></a>
+<span class="sourceLineNo">407</span><a name="line.407"></a>
+<span class="sourceLineNo">408</span>    /**<a name="line.408"></a>
+<span class="sourceLineNo">409</span>     * Sets the socket factory used to create new xmppConnection sockets.<a name="line.409"></a>
+<span class="sourceLineNo">410</span>     * This is useful when connecting through SOCKS5 proxies.<a name="line.410"></a>
+<span class="sourceLineNo">411</span>     *<a name="line.411"></a>
+<span class="sourceLineNo">412</span>     * @param socketFactory used to create new sockets.<a name="line.412"></a>
+<span class="sourceLineNo">413</span>     */<a name="line.413"></a>
+<span class="sourceLineNo">414</span>    public void setSocketFactory(SocketFactory socketFactory) {<a name="line.414"></a>
+<span class="sourceLineNo">415</span>        this.socketFactory = socketFactory;<a name="line.415"></a>
+<span class="sourceLineNo">416</span>    }<a name="line.416"></a>
+<span class="sourceLineNo">417</span><a name="line.417"></a>
+<span class="sourceLineNo">418</span>    /**<a name="line.418"></a>
+<span class="sourceLineNo">419</span>     * Sets if an initial available presence will be sent to the server. By default<a name="line.419"></a>
+<span class="sourceLineNo">420</span>     * an available presence will be sent to the server indicating that this presence<a name="line.420"></a>
+<span class="sourceLineNo">421</span>     * is not online and available to receive messages. If you want to log in without<a name="line.421"></a>
+<span class="sourceLineNo">422</span>     * being 'noticed' then pass a &lt;tt&gt;false&lt;/tt&gt; value.<a name="line.422"></a>
+<span class="sourceLineNo">423</span>     *<a name="line.423"></a>
+<span class="sourceLineNo">424</span>     * @param sendPresence true if an initial available presence will be sent while logging in.<a name="line.424"></a>
+<span class="sourceLineNo">425</span>     */<a name="line.425"></a>
+<span class="sourceLineNo">426</span>    public void setSendPresence(boolean sendPresence) {<a name="line.426"></a>
+<span class="sourceLineNo">427</span>        this.sendPresence = sendPresence;<a name="line.427"></a>
+<span class="sourceLineNo">428</span>    }<a name="line.428"></a>
+<span class="sourceLineNo">429</span><a name="line.429"></a>
+<span class="sourceLineNo">430</span>    /**<a name="line.430"></a>
+<span class="sourceLineNo">431</span>     * Returns true if the roster will be loaded from the server when logging in. This<a name="line.431"></a>
+<span class="sourceLineNo">432</span>     * is the common behaviour for clients but sometimes clients may want to differ this<a name="line.432"></a>
+<span class="sourceLineNo">433</span>     * or just never do it if not interested in rosters.<a name="line.433"></a>
+<span class="sourceLineNo">434</span>     *<a name="line.434"></a>
+<span class="sourceLineNo">435</span>     * @return true if the roster will be loaded from the server when logging in.<a name="line.435"></a>
+<span class="sourceLineNo">436</span>     */<a name="line.436"></a>
+<span class="sourceLineNo">437</span>    public boolean isRosterLoadedAtLogin() {<a name="line.437"></a>
+<span class="sourceLineNo">438</span>        return rosterLoadedAtLogin;<a name="line.438"></a>
+<span class="sourceLineNo">439</span>    }<a name="line.439"></a>
+<span class="sourceLineNo">440</span><a name="line.440"></a>
+<span class="sourceLineNo">441</span>    /**<a name="line.441"></a>
+<span class="sourceLineNo">442</span>     * Sets if the roster will be loaded from the server when logging in. This<a name="line.442"></a>
+<span class="sourceLineNo">443</span>     * is the common behaviour for clients but sometimes clients may want to differ this<a name="line.443"></a>
+<span class="sourceLineNo">444</span>     * or just never do it if not interested in rosters.<a name="line.444"></a>
+<span class="sourceLineNo">445</span>     *<a name="line.445"></a>
+<span class="sourceLineNo">446</span>     * @param rosterLoadedAtLogin if the roster will be loaded from the server when logging in.<a name="line.446"></a>
+<span class="sourceLineNo">447</span>     */<a name="line.447"></a>
+<span class="sourceLineNo">448</span>    public void setRosterLoadedAtLogin(boolean rosterLoadedAtLogin) {<a name="line.448"></a>
+<span class="sourceLineNo">449</span>        this.rosterLoadedAtLogin = rosterLoadedAtLogin;<a name="line.449"></a>
+<span class="sourceLineNo">450</span>    }<a name="line.450"></a>
+<span class="sourceLineNo">451</span><a name="line.451"></a>
+<span class="sourceLineNo">452</span>    /**<a name="line.452"></a>
+<span class="sourceLineNo">453</span>     * Returns true if a {@link Session} will be requested on login if the server<a name="line.453"></a>
+<span class="sourceLineNo">454</span>     * supports it. Although this was mandatory on RFC 3921, RFC 6120/6121 don't<a name="line.454"></a>
+<span class="sourceLineNo">455</span>     * even mention this part of the protocol.<a name="line.455"></a>
+<span class="sourceLineNo">456</span>     *<a name="line.456"></a>
+<span class="sourceLineNo">457</span>     * @return true if a session has to be requested when logging in.<a name="line.457"></a>
+<span class="sourceLineNo">458</span>     */<a name="line.458"></a>
+<span class="sourceLineNo">459</span>    public boolean isLegacySessionDisabled() {<a name="line.459"></a>
+<span class="sourceLineNo">460</span>        return legacySessionDisabled;<a name="line.460"></a>
+<span class="sourceLineNo">461</span>    }<a name="line.461"></a>
+<span class="sourceLineNo">462</span><a name="line.462"></a>
+<span class="sourceLineNo">463</span>    /**<a name="line.463"></a>
+<span class="sourceLineNo">464</span>     * Sets if a {@link Session} will be requested on login if the server supports<a name="line.464"></a>
+<span class="sourceLineNo">465</span>     * it. Although this was mandatory on RFC 3921, RFC 6120/6121 don't even<a name="line.465"></a>
+<span class="sourceLineNo">466</span>     * mention this part of the protocol.<a name="line.466"></a>
+<span class="sourceLineNo">467</span>     *<a name="line.467"></a>
+<span class="sourceLineNo">468</span>     * @param legacySessionDisabled if a session has to be requested when logging in.<a name="line.468"></a>
+<span class="sourceLineNo">469</span>     */<a name="line.469"></a>
+<span class="sourceLineNo">470</span>    public void setLegacySessionDisabled(boolean legacySessionDisabled) {<a name="line.470"></a>
+<span class="sourceLineNo">471</span>        this.legacySessionDisabled = legacySessionDisabled;<a name="line.471"></a>
+<span class="sourceLineNo">472</span>    }<a name="line.472"></a>
+<span class="sourceLineNo">473</span><a name="line.473"></a>
+<span class="sourceLineNo">474</span>    /**<a name="line.474"></a>
+<span class="sourceLineNo">475</span>     * Returns a CallbackHandler to obtain information, such as the password or<a name="line.475"></a>
+<span class="sourceLineNo">476</span>     * principal information during the SASL authentication. A CallbackHandler<a name="line.476"></a>
+<span class="sourceLineNo">477</span>     * will be used &lt;b&gt;ONLY&lt;/b&gt; if no password was specified during the login while<a name="line.477"></a>
+<span class="sourceLineNo">478</span>     * using SASL authentication.<a name="line.478"></a>
+<span class="sourceLineNo">479</span>     *<a name="line.479"></a>
+<span class="sourceLineNo">480</span>     * @return a CallbackHandler to obtain information, such as the password or<a name="line.480"></a>
+<span class="sourceLineNo">481</span>     * principal information during the SASL authentication.<a name="line.481"></a>
+<span class="sourceLineNo">482</span>     */<a name="line.482"></a>
+<span class="sourceLineNo">483</span>    public CallbackHandler getCallbackHandler() {<a name="line.483"></a>
+<span class="sourceLineNo">484</span>        return callbackHandler;<a name="line.484"></a>
+<span class="sourceLineNo">485</span>    }<a name="line.485"></a>
+<span class="sourceLineNo">486</span><a name="line.486"></a>
+<span class="sourceLineNo">487</span>    /**<a name="line.487"></a>
+<span class="sourceLineNo">488</span>     * Sets a CallbackHandler to obtain information, such as the password or<a name="line.488"></a>
+<span class="sourceLineNo">489</span>     * principal information during the SASL authentication. A CallbackHandler<a name="line.489"></a>
+<span class="sourceLineNo">490</span>     * will be used &lt;b&gt;ONLY&lt;/b&gt; if no password was specified during the login while<a name="line.490"></a>
+<span class="sourceLineNo">491</span>     * using SASL authentication.<a name="line.491"></a>
+<span class="sourceLineNo">492</span>     *<a name="line.492"></a>
+<span class="sourceLineNo">493</span>     * @param callbackHandler to obtain information, such as the password or<a name="line.493"></a>
+<span class="sourceLineNo">494</span>     * principal information during the SASL authentication.<a name="line.494"></a>
+<span class="sourceLineNo">495</span>     */<a name="line.495"></a>
+<span class="sourceLineNo">496</span>    public void setCallbackHandler(CallbackHandler callbackHandler) {<a name="line.496"></a>
+<span class="sourceLineNo">497</span>        this.callbackHandler = callbackHandler;<a name="line.497"></a>
+<span class="sourceLineNo">498</span>    }<a name="line.498"></a>
+<span class="sourceLineNo">499</span><a name="line.499"></a>
+<span class="sourceLineNo">500</span>    /**<a name="line.500"></a>
+<span class="sourceLineNo">501</span>     * Returns the socket factory used to create new xmppConnection sockets.<a name="line.501"></a>
+<span class="sourceLineNo">502</span>     * This is useful when connecting through SOCKS5 proxies.<a name="line.502"></a>
+<span class="sourceLineNo">503</span>     * <a name="line.503"></a>
+<span class="sourceLineNo">504</span>     * @return socketFactory used to create new sockets.<a name="line.504"></a>
+<span class="sourceLineNo">505</span>     */<a name="line.505"></a>
+<span class="sourceLineNo">506</span>    public SocketFactory getSocketFactory() {<a name="line.506"></a>
+<span class="sourceLineNo">507</span>        return this.socketFactory;<a name="line.507"></a>
+<span class="sourceLineNo">508</span>    }<a name="line.508"></a>
+<span class="sourceLineNo">509</span><a name="line.509"></a>
+<span class="sourceLineNo">510</span>    public List&lt;HostAddress&gt; getHostAddresses() {<a name="line.510"></a>
+<span class="sourceLineNo">511</span>        return Collections.unmodifiableList(hostAddresses);<a name="line.511"></a>
+<span class="sourceLineNo">512</span>    }<a name="line.512"></a>
+<span class="sourceLineNo">513</span><a name="line.513"></a>
+<span class="sourceLineNo">514</span>    /**<a name="line.514"></a>
+<span class="sourceLineNo">515</span>     * Set the permanent roster store<a name="line.515"></a>
+<span class="sourceLineNo">516</span>     */<a name="line.516"></a>
+<span class="sourceLineNo">517</span>    public void setRosterStore(RosterStore store) {<a name="line.517"></a>
+<span class="sourceLineNo">518</span>        rosterStore = store;<a name="line.518"></a>
+<span class="sourceLineNo">519</span>    }<a name="line.519"></a>
+<span class="sourceLineNo">520</span><a name="line.520"></a>
+<span class="sourceLineNo">521</span>    /**<a name="line.521"></a>
+<span class="sourceLineNo">522</span>     * Get the permanent roster store<a name="line.522"></a>
+<span class="sourceLineNo">523</span>     */<a name="line.523"></a>
+<span class="sourceLineNo">524</span>    public RosterStore getRosterStore() {<a name="line.524"></a>
+<span class="sourceLineNo">525</span>        return rosterStore;<a name="line.525"></a>
+<span class="sourceLineNo">526</span>    }<a name="line.526"></a>
+<span class="sourceLineNo">527</span><a name="line.527"></a>
+<span class="sourceLineNo">528</span><a name="line.528"></a>
+<span class="sourceLineNo">529</span>    /**<a name="line.529"></a>
+<span class="sourceLineNo">530</span>     * An enumeration for TLS security modes that are available when making a connection<a name="line.530"></a>
+<span class="sourceLineNo">531</span>     * to the XMPP server.<a name="line.531"></a>
+<span class="sourceLineNo">532</span>     */<a name="line.532"></a>
+<span class="sourceLineNo">533</span>    public static enum SecurityMode {<a name="line.533"></a>
+<span class="sourceLineNo">534</span><a name="line.534"></a>
+<span class="sourceLineNo">535</span>        /**<a name="line.535"></a>
+<span class="sourceLineNo">536</span>         * Securirty via TLS encryption is required in order to connect. If the server<a name="line.536"></a>
+<span class="sourceLineNo">537</span>         * does not offer TLS or if the TLS negotiaton fails, the connection to the server<a name="line.537"></a>
+<span class="sourceLineNo">538</span>         * will fail.<a name="line.538"></a>
+<span class="sourceLineNo">539</span>         */<a name="line.539"></a>
+<span class="sourceLineNo">540</span>        required,<a name="line.540"></a>
+<span class="sourceLineNo">541</span><a name="line.541"></a>
+<span class="sourceLineNo">542</span>        /**<a name="line.542"></a>
+<span class="sourceLineNo">543</span>         * Security via TLS encryption is used whenever it's available. This is the<a name="line.543"></a>
+<span class="sourceLineNo">544</span>         * default setting.<a name="line.544"></a>
+<span class="sourceLineNo">545</span>         */<a name="line.545"></a>
+<span class="sourceLineNo">546</span>        enabled,<a name="line.546"></a>
+<span class="sourceLineNo">547</span><a name="line.547"></a>
+<span class="sourceLineNo">548</span>        /**<a name="line.548"></a>
+<span class="sourceLineNo">549</span>         * Security via TLS encryption is disabled and only un-encrypted connections will<a name="line.549"></a>
+<span class="sourceLineNo">550</span>         * be used. If only TLS encryption is available from the server, the connection<a name="line.550"></a>
+<span class="sourceLineNo">551</span>         * will fail.<a name="line.551"></a>
+<span class="sourceLineNo">552</span>         */<a name="line.552"></a>
+<span class="sourceLineNo">553</span>        disabled<a name="line.553"></a>
+<span class="sourceLineNo">554</span>    }<a name="line.554"></a>
+<span class="sourceLineNo">555</span><a name="line.555"></a>
+<span class="sourceLineNo">556</span>    /**<a name="line.556"></a>
+<span class="sourceLineNo">557</span>     * Returns the username to use when trying to reconnect to the server.<a name="line.557"></a>
+<span class="sourceLineNo">558</span>     *<a name="line.558"></a>
+<span class="sourceLineNo">559</span>     * @return the username to use when trying to reconnect to the server.<a name="line.559"></a>
+<span class="sourceLineNo">560</span>     */<a name="line.560"></a>
+<span class="sourceLineNo">561</span>    public String getUsername() {<a name="line.561"></a>
+<span class="sourceLineNo">562</span>        return this.username;<a name="line.562"></a>
+<span class="sourceLineNo">563</span>    }<a name="line.563"></a>
+<span class="sourceLineNo">564</span><a name="line.564"></a>
+<span class="sourceLineNo">565</span>    /**<a name="line.565"></a>
+<span class="sourceLineNo">566</span>     * Returns the password to use when trying to reconnect to the server.<a name="line.566"></a>
+<span class="sourceLineNo">567</span>     *<a name="line.567"></a>
+<span class="sourceLineNo">568</span>     * @return the password to use when trying to reconnect to the server.<a name="line.568"></a>
+<span class="sourceLineNo">569</span>     */<a name="line.569"></a>
+<span class="sourceLineNo">570</span>    public String getPassword() {<a name="line.570"></a>
+<span class="sourceLineNo">571</span>        return this.password;<a name="line.571"></a>
+<span class="sourceLineNo">572</span>    }<a name="line.572"></a>
+<span class="sourceLineNo">573</span><a name="line.573"></a>
+<span class="sourceLineNo">574</span>    /**<a name="line.574"></a>
+<span class="sourceLineNo">575</span>     * Returns the resource to use when trying to reconnect to the server.<a name="line.575"></a>
+<span class="sourceLineNo">576</span>     *<a name="line.576"></a>
+<span class="sourceLineNo">577</span>     * @return the resource to use when trying to reconnect to the server.<a name="line.577"></a>
+<span class="sourceLineNo">578</span>     */<a name="line.578"></a>
+<span class="sourceLineNo">579</span>    public String getResource() {<a name="line.579"></a>
+<span class="sourceLineNo">580</span>        return resource;<a name="line.580"></a>
+<span class="sourceLineNo">581</span>    }<a name="line.581"></a>
+<span class="sourceLineNo">582</span><a name="line.582"></a>
+<span class="sourceLineNo">583</span>    /**<a name="line.583"></a>
+<span class="sourceLineNo">584</span>     * Returns true if an available presence should be sent when logging in while reconnecting.<a name="line.584"></a>
+<span class="sourceLineNo">585</span>     *<a name="line.585"></a>
+<span class="sourceLineNo">586</span>     * @return true if an available presence should be sent when logging in while reconnecting<a name="line.586"></a>
+<span class="sourceLineNo">587</span>     */<a name="line.587"></a>
+<span class="sourceLineNo">588</span>    public boolean isSendPresence() {<a name="line.588"></a>
+<span class="sourceLineNo">589</span>        return sendPresence;<a name="line.589"></a>
+<span class="sourceLineNo">590</span>    }<a name="line.590"></a>
+<span class="sourceLineNo">591</span><a name="line.591"></a>
+<span class="sourceLineNo">592</span>    void setLoginInfo(String username, String password, String resource) {<a name="line.592"></a>
+<span class="sourceLineNo">593</span>        this.username = username;<a name="line.593"></a>
+<span class="sourceLineNo">594</span>        this.password = password;<a name="line.594"></a>
+<span class="sourceLineNo">595</span>        this.resource = resource;<a name="line.595"></a>
+<span class="sourceLineNo">596</span>    }<a name="line.596"></a>
+<span class="sourceLineNo">597</span><a name="line.597"></a>
+<span class="sourceLineNo">598</span>    void maybeResolveDns() throws Exception {<a name="line.598"></a>
+<span class="sourceLineNo">599</span>        if (!useDnsSrvRr) return;<a name="line.599"></a>
+<span class="sourceLineNo">600</span>        hostAddresses = DNSUtil.resolveXMPPDomain(serviceName);<a name="line.600"></a>
+<span class="sourceLineNo">601</span>    }<a name="line.601"></a>
+<span class="sourceLineNo">602</span><a name="line.602"></a>
+<span class="sourceLineNo">603</span>    private void initHostAddresses(String host, int port) {<a name="line.603"></a>
+<span class="sourceLineNo">604</span>        if (StringUtils.isEmpty(host)) {<a name="line.604"></a>
+<span class="sourceLineNo">605</span>            throw new IllegalArgumentException("host must not be the empty String");<a name="line.605"></a>
+<span class="sourceLineNo">606</span>        }<a name="line.606"></a>
+<span class="sourceLineNo">607</span>        hostAddresses = new ArrayList&lt;HostAddress&gt;(1);<a name="line.607"></a>
+<span class="sourceLineNo">608</span>        HostAddress hostAddress;<a name="line.608"></a>
+<span class="sourceLineNo">609</span>        hostAddress = new HostAddress(host, port);<a name="line.609"></a>
+<span class="sourceLineNo">610</span>        hostAddresses.add(hostAddress);<a name="line.610"></a>
+<span class="sourceLineNo">611</span>        useDnsSrvRr = false;<a name="line.611"></a>
+<span class="sourceLineNo">612</span>    }<a name="line.612"></a>
+<span class="sourceLineNo">613</span>}<a name="line.613"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
