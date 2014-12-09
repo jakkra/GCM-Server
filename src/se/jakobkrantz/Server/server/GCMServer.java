@@ -75,6 +75,7 @@ public class GCMServer {
         connection = new XMPPTCPConnection(config);
         connection.connect();
 
+
         connection.addConnectionListener(new LoggingConnectionListener());
 
         // Handle incoming packets
