@@ -1,5 +1,6 @@
-package se.jakobkrantz.Server.server;/*
- * Created by krantz on 14-12-08.
+package se.jakobkrantz.Server.server;
+/*
+ * Created by krantz on 14-12-11.
  */
 
 import org.jivesoftware.smack.PacketListener;
@@ -103,10 +104,10 @@ public class PacketProcessor implements PacketListener {
      */
     public void handleUpstreamMessage(Map<String, Object> jsonObject) {
         Map<String, String> payload = (Map<String, String>) jsonObject.get("data");
-
+        GCMMessage gcmMessage = new GCMMessage((String) jsonObject.get("from"), (String) jsonObject.get("message_id"), payload);
         if (payload.get(Constants.ACTION) != null) {
             PayloadProcessor processor = ProcessorFactory.getProcessor(payload.get(Constants.ACTION));
-            processor.handleMessage(payload);
+            processor.handleMessage(gcmMessage);
         } else {
             System.out.println(jsonObject.get(Constants.ACTION));
             throw new IllegalStateException("UpstreamMessage must contain an ACTION");

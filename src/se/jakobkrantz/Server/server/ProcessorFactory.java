@@ -1,4 +1,5 @@
-package se.jakobkrantz.Server.server;/*
+package se.jakobkrantz.Server.server;
+/*
  * Created by krantz on 14-12-11.
  */
 

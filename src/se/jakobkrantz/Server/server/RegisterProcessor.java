@@ -6,13 +6,11 @@ import org.jivesoftware.smack.SmackException;
 import se.jakobkrantz.Server.Constants;
 import se.jakobkrantz.Server.database.Database;
 
-import java.util.Map;
-
 public class RegisterProcessor implements PayloadProcessor {
     @Override
-    public void handleMessage(Map<String, String> payload) {
+    public void handleMessage(GCMMessage message) {
         Database db = Database.getInstance();
-        String from = (String) payload.get("from");
+        String from = message.getPayload().get("from");
         db.register(from);
         String jsonMess = JsonMessages.createJsonMessage(from, GCMServer.nextMessageId(), null, null, Constants.GCM_DEFAULT_TTL, true);
         try {
