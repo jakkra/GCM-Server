@@ -10,9 +10,9 @@ import java.util.Map;
 
 public class RegisterProcessor implements PayloadProcessor {
     @Override
-    public void handleMessage(Map<String, Object> jsonObject) {
+    public void handleMessage(Map<String, String> payload) {
         Database db = Database.getInstance();
-        String from = (String) jsonObject.get("from");
+        String from = (String) payload.get("from");
         db.register(from);
         String jsonMess = JsonMessages.createJsonMessage(from, GCMServer.nextMessageId(), null, null, Constants.GCM_DEFAULT_TTL, true);
         try {

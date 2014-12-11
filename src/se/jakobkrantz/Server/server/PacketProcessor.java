@@ -100,13 +100,15 @@ public class PacketProcessor implements PacketListener {
 
     /**
      * Handles an upstream data message from a device application.
-     * This sample echo server sends an echo message back to the device.
      */
     public void handleUpstreamMessage(Map<String, Object> jsonObject) {
-        if (jsonObject.get("action") != null) {
-            PayloadProcessor processor = ProcessorFactory.getProcessor((String) jsonObject.get("action"));
-            processor.handleMessage(jsonObject);
+        Map<String, String> payload = (Map<String, String>) jsonObject.get("data");
+
+        if (payload.get(Constants.ACTION) != null) {
+            PayloadProcessor processor = ProcessorFactory.getProcessor(payload.get(Constants.ACTION));
+            processor.handleMessage(payload);
         } else {
+            System.out.println(jsonObject.get(Constants.ACTION));
             throw new IllegalStateException("UpstreamMessage must contain an ACTION");
         }
 

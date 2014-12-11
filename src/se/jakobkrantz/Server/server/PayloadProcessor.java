@@ -6,5 +6,5 @@ import java.util.Map;
 
 public interface PayloadProcessor {
 
-    public void handleMessage(Map<String, Object> jsonObject);
+    public void handleMessage(Map<String, String> payload);
 }

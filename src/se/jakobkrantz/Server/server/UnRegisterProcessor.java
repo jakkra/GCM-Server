@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class UnRegisterProcessor implements PayloadProcessor {
     @Override
-    public void handleMessage(Map<String, Object> jsonObject) {
+    public void handleMessage(Map<String, String> payLoad) {
         //TODO
     }
 }
