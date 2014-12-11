@@ -21,7 +21,7 @@ public class JsonMessages {
      * @param delayWhileIdle GCM delay_while_idle parameter (Optional).
      * @return JSON encoded GCM message.
      */
-    public String createJsonMessage(String to, String messageId,
+    public static String createJsonMessage(String to, String messageId,
                                            Map<String, String> payload, String collapseKey, Long timeToLive,
                                            Boolean delayWhileIdle) {
         Map<String, Object> message = new HashMap<String, Object>();

@@ -29,7 +29,6 @@ public class PacketProcessor implements PacketListener {
     @Override
     public void processPacket(Packet packet) throws SmackException.NotConnectedException {
 
-        logger.log(Level.INFO, "Received: " + packet.toXML());
         Message incomingMessage = (Message) packet;
         GcmPacketExtension gcmPacket = (GcmPacketExtension) incomingMessage.getExtension(Constants.GCM_NAMESPACE);
         String json = gcmPacket.getJson();
@@ -39,7 +38,6 @@ public class PacketProcessor implements PacketListener {
 
             // present for "ack"/"nack", null otherwise
             Object messageType = jsonObject.get("message_type");
-
             if (messageType == null) {
                 // Normal upstream data message
                 handleUpstreamMessage(jsonObject);
@@ -103,23 +101,14 @@ public class PacketProcessor implements PacketListener {
     /**
      * Handles an upstream data message from a device application.
      * This sample echo server sends an echo message back to the device.
-     * TODO: Implement the right way
      */
     public void handleUpstreamMessage(Map<String, Object> jsonObject) {
-        // PackageName of the application that sent this message.
-        String category = (String) jsonObject.get("category");
-        String from = (String) jsonObject.get("from");
-        @SuppressWarnings("unchecked")
-        Map<String, String> payload = (Map<String, String>) jsonObject.get("data");
-        payload.put("ECHO", "Application: " + category);
-
-        // Send an ECHO response back TODO: don't do this :)
-        String echo = jsonBuilder.createJsonMessage(from, gcmServer.nextMessageId(), payload, "echo:CollapseKey", null, false);
-
-        try {
-            gcmServer.sendDownstreamMessage(echo);
-        } catch (SmackException.NotConnectedException e) {
-            logger.log(Level.WARNING, "Not connected anymore, echo message is not sent", e);
+        if (jsonObject.get("action") != null) {
+            PayloadProcessor processor = ProcessorFactory.getProcessor((String) jsonObject.get("action"));
+            processor.handleMessage(jsonObject);
+        } else {
+            throw new IllegalStateException("UpstreamMessage must contain an ACTION");
         }
+
     }
 }

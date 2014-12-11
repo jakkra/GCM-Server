@@ -26,7 +26,7 @@ public class GCMServer {
     private static final Logger logger = Logger.getLogger("GCMServer");
 
     private static final String GCM_SERVER = "gcm.googleapis.com";
-    private static final int GCM_PORT = 5236; //TODO Should change to 5235 when testing done
+    private static final int GCM_PORT = 5235; //TODO Should change to 5235 when testing done
 
     private static GCMServer sInstance;
     private String projectId;
@@ -40,8 +40,7 @@ public class GCMServer {
      */
     protected volatile boolean connectionDraining = false;
 
-    public boolean sendDownstreamMessage(String jsonRequest) throws
-            NotConnectedException {
+    public boolean sendDownstreamMessage(String jsonRequest) throws NotConnectedException {
         if (!connectionDraining) {
             send(jsonRequest);
             return true;
@@ -50,7 +49,7 @@ public class GCMServer {
         return false;
     }
     //TODO change to increasing integer, which also is saved in db when exiting
-    public String nextMessageId() {
+    public static String nextMessageId() {
         return "m-" + UUID.randomUUID().toString();
     }
 
