@@ -6,7 +6,7 @@ import org.jivesoftware.smack.packet.DefaultPacketExtension;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.util.StringUtils;
-import se.jakobkrantz.Server.Constants;
+import se.jakobkrantz.Server.GcmConstants;
 
 /**
  * XMPP Packet Extension for GCM Cloud Connection Server.
@@ -16,7 +16,7 @@ public final class GcmPacketExtension extends DefaultPacketExtension {
     private final String json;
 
     public GcmPacketExtension(String json) {
-        super(Constants.GCM_ELEMENT_NAME, Constants.GCM_NAMESPACE);
+        super(GcmConstants.GCM_ELEMENT_NAME, GcmConstants.GCM_NAMESPACE);
         this.json = json;
     }
 
@@ -27,8 +27,8 @@ public final class GcmPacketExtension extends DefaultPacketExtension {
     @Override
     public String toXML() {
         return String.format("<%s xmlns=\"%s\">%s</%s>",
-                Constants.GCM_ELEMENT_NAME, Constants.GCM_NAMESPACE,
-                StringUtils.escapeForXML(json), Constants.GCM_ELEMENT_NAME);
+                GcmConstants.GCM_ELEMENT_NAME, GcmConstants.GCM_NAMESPACE,
+                StringUtils.escapeForXML(json), GcmConstants.GCM_ELEMENT_NAME);
     }
 
     public Packet toPacket() {

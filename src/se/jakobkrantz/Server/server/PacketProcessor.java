@@ -9,7 +9,7 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
-import se.jakobkrantz.Server.Constants;
+import se.jakobkrantz.Server.GcmConstants;
 
 import java.util.Map;
 import java.util.logging.Level;
@@ -31,7 +31,7 @@ public class PacketProcessor implements PacketListener {
     public void processPacket(Packet packet) throws SmackException.NotConnectedException {
 
         Message incomingMessage = (Message) packet;
-        GcmPacketExtension gcmPacket = (GcmPacketExtension) incomingMessage.getExtension(Constants.GCM_NAMESPACE);
+        GcmPacketExtension gcmPacket = (GcmPacketExtension) incomingMessage.getExtension(GcmConstants.GCM_NAMESPACE);
         String json = gcmPacket.getJson();
         try {
             @SuppressWarnings("unchecked")
@@ -105,11 +105,11 @@ public class PacketProcessor implements PacketListener {
     public void handleUpstreamMessage(Map<String, Object> jsonObject) {
         Map<String, String> payload = (Map<String, String>) jsonObject.get("data");
         GCMMessage gcmMessage = new GCMMessage((String) jsonObject.get("from"), (String) jsonObject.get("message_id"), payload);
-        if (payload.get(Constants.ACTION) != null) {
-            PayloadProcessor processor = ProcessorFactory.getProcessor(payload.get(Constants.ACTION));
+        if (payload.get(GcmConstants.ACTION) != null) {
+            PayloadProcessor processor = ProcessorFactory.getProcessor(payload.get(GcmConstants.ACTION));
             processor.handleMessage(gcmMessage);
         } else {
-            System.out.println(jsonObject.get(Constants.ACTION));
+            System.out.println(jsonObject.get(GcmConstants.ACTION));
             throw new IllegalStateException("UpstreamMessage must contain an ACTION");
         }
 

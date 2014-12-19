@@ -5,6 +5,7 @@ package se.jakobkrantz.Server.server;/*
 public class AddInterestingProcessor implements PayloadProcessor {
     @Override
     public void handleMessage(GCMMessage message) {
+        System.out.println(message.getPayload().toString());
         //TODO
     }
 }

@@ -13,7 +13,7 @@ import org.jivesoftware.smack.provider.PacketExtensionProvider;
 import org.jivesoftware.smack.provider.ProviderManager;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.xmlpull.v1.XmlPullParser;
-import se.jakobkrantz.Server.Constants;
+import se.jakobkrantz.Server.GcmConstants;
 
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
@@ -115,7 +115,7 @@ public class GCMServer {
 
     private GCMServer() {
         // Add GcmPacketExtension
-        ProviderManager.addExtensionProvider(Constants.GCM_ELEMENT_NAME, Constants.GCM_NAMESPACE, new PacketExtensionProvider() {
+        ProviderManager.addExtensionProvider(GcmConstants.GCM_ELEMENT_NAME, GcmConstants.GCM_NAMESPACE, new PacketExtensionProvider() {
             @Override
             public PacketExtension parseExtension(XmlPullParser parser) throws Exception {
                 String json = parser.nextText();
