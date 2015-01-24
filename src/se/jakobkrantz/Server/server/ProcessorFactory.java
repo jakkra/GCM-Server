@@ -7,10 +7,6 @@ package se.jakobkrantz.Server.server;
 import se.jakobkrantz.Server.GcmConstants;
 
 public class ProcessorFactory {
-
-
-
-
     public static PayloadProcessor getProcessor(String action) {
         if (action == null) {
             throw new IllegalStateException("action must not be null");
@@ -21,9 +17,12 @@ public class ProcessorFactory {
             return new UnRegisterProcessor();
         } else if (action.equals(GcmConstants.ACTION_SET_INTERESTING_LOCATIONS)) {
             return new AddInterestingProcessor();
-        } else if(action.equals(GcmConstants.ACTION_REPORT_DISTURBANCE)){
+        } else if (action.equals(GcmConstants.ACTION_REPORT_DISTURBANCE)) {
             return new DisturbanceReportProcessor();
+        } else if (action.equals(GcmConstants.ACTION_REMOVE_INTERESTING_LOCATION)) {
+            return new RemoveInterestingProcessor();
         }
+
         throw new IllegalStateException("Action " + action + " is unknown");
     }
 }

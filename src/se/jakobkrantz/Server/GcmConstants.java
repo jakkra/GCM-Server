@@ -6,6 +6,7 @@ public class GcmConstants {
 
     public static final String GCM_ELEMENT_NAME = "gcm";
     public static final String GCM_NAMESPACE = "google:mobile:data";
+    public static final String ACTION_REMOVE_INTERESTING_LOCATION = "actionRemoveInterestingLocation";
 
     public static String ACTION = "action";
 

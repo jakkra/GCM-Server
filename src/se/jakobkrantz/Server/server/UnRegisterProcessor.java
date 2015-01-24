@@ -5,6 +5,6 @@ package se.jakobkrantz.Server.server;/*
 public class UnRegisterProcessor implements PayloadProcessor {
     @Override
     public void handleMessage(GCMMessage message) {
-        //TODO
+        //TODO handle unregister
     }
 }
