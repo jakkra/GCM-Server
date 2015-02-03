@@ -27,20 +27,19 @@ public class DisturbanceReportProcessor implements PayloadProcessor {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+
         //Might not be thread safe, monitor needed
         if (db == null) {
             System.err.println("database null");
             return;
         }
         List<String> allRegs = db.getAllRegistrated();
+        allRegs.remove(message.getFrom());
+        GCMServer server = GCMServer.getInstance();
+
         for (String regId : allRegs) {
             String jsonMess = JsonMessages.createJsonMessage(regId, GCMServer.nextMessageId(), payload, null, GcmConstants.GCM_DEFAULT_TTL, true);
-            try {
-                GCMServer.getInstance().sendDownstreamMessage(jsonMess);
-            } catch (SmackException.NotConnectedException e) {
-                e.printStackTrace();
-            }
-            GCMServer server = GCMServer.getInstance();
+
             try {
                 server.sendDownstreamMessage(jsonMess);
             } catch (SmackException.NotConnectedException e) {

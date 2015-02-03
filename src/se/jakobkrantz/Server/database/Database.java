@@ -62,6 +62,7 @@ public class Database {
     }
 
     public void register(String from) {
+        System.out.println("Registrated device " + from);
         executeStatement("insert into " + TABLE_NAME + " values (null," + "\'" + from + "\'," + "datetime('now','localtime'))");
 
     }
