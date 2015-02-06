@@ -9,6 +9,7 @@ public class GcmConstants {
     public static final String ACTION_REMOVE_INTERESTING_LOCATION = "actionRemoveInterestingLocation";
 
     public static final String DISTURBANCE_TYPE = "distType";
+    public static final String ACTION_UNREGISTER_SUCCESSFUL = "unregisterSuccessful";
 
     public static String ACTION = "action";
 

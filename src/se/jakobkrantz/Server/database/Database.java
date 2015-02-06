@@ -124,5 +124,11 @@ public class Database {
             }
         }
     }
+
+    public void unregister(String from) {
+        System.out.println("Unregister device " + from);
+        executeStatement("DELETE FROM " + TABLE_NAME + " WHERE " + COLUMN_REG_ID + "='" + from + "';");
+    }
 }
+
 
