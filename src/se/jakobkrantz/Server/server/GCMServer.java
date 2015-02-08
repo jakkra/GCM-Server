@@ -48,7 +48,7 @@ public class GCMServer {
         logger.info("Dropping downstream message since the connection is draining");
         return false;
     }
-    //TODO change to increasing integer, which also is saved in db when exiting
+    //TODO change to something other than just random
     public static String nextMessageId() {
         return "m-" + UUID.randomUUID().toString();
     }

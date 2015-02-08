@@ -10,6 +10,7 @@ public class GcmConstants {
 
     public static final String DISTURBANCE_TYPE = "distType";
     public static final String ACTION_UNREGISTER_SUCCESSFUL = "unregisterSuccessful";
+    public static final String ACTION_ACK = "actionAck";
 
     public static String ACTION = "action";
 

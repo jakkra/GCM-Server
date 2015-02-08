@@ -10,6 +10,8 @@ import org.jivesoftware.smack.packet.Packet;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 import se.jakobkrantz.Server.GcmConstants;
+import se.jakobkrantz.Server.database.Database;
+import sun.rmi.runtime.Log;
 
 import java.util.Map;
 import java.util.logging.Level;
@@ -86,7 +88,15 @@ public class PacketProcessor implements PacketListener {
     public void handleNackReceipt(Map<String, Object> jsonObject) {
         String messageId = (String) jsonObject.get("message_id");
         String from = (String) jsonObject.get("from");
-        logger.log(Level.INFO, "handleNackReceipt() from: " + from + ",messageId: " + messageId);
+
+        String error = (String) jsonObject.get("error");
+        if (error.equals("DEVICE_UNREGISTERED")) {
+            Database.getInstance().unregister(from);
+            logger.log(Level.INFO, "Device unregistered handleNackReceipt() from: " + from + ",messageId: " + messageId + "NotRegistered??? Check");
+
+        } else {
+            logger.log(Level.INFO, "handleNackReceipt() from: " + from + ",messageId: " + messageId + " error type " + jsonObject.get("error"));
+        }
     }
 
     public void handleControlMessage(Map<String, Object> jsonObject) {

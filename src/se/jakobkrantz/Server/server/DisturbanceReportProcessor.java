@@ -6,6 +6,7 @@ import se.jakobkrantz.Server.GcmConstants;
 import se.jakobkrantz.Server.database.Database;
 import se.jakobkrantz.skanetrafiken.XMLQueryJourneyHandler;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,8 +14,8 @@ import java.util.Map;
  * Created by krantz on 14-12-18.
  */
 public class DisturbanceReportProcessor implements PayloadProcessor {
-    private XMLReader xmlR;
-    private XMLQueryJourneyHandler xmlQueryJourneyHandler;
+    //private XMLReader xmlR;
+    //private XMLQueryJourneyHandler xmlQueryJourneyHandler;
     private Map<String, String> payload;
 
     @Override
@@ -47,6 +48,19 @@ public class DisturbanceReportProcessor implements PayloadProcessor {
             }
 
         }
+
+        //Ack the client, so it knows if the server is online or not.
+        HashMap<String,String> ackPayload = new HashMap<String, String>();
+        ackPayload.put(GcmConstants.ACTION, GcmConstants.ACTION_ACK);
+        String jsonMess = JsonMessages.createJsonMessage(message.getFrom(), GCMServer.nextMessageId(), ackPayload, null, GcmConstants.GCM_DEFAULT_TTL, true);
+        try {
+            server.sendDownstreamMessage(jsonMess);
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+
+
+        //TODO Handle the report and report it to the devices which are interested
 //        SAXParserFactory saxPF = SAXParserFactory.newInstance();
 //        SAXParser saxP;
 //
@@ -87,7 +101,7 @@ public class DisturbanceReportProcessor implements PayloadProcessor {
 //                }
 //                ArrayList<Journey> journeys = xmlQueryJourneyHandler.getJourneys();
 //
-//                //When disturbance is reported it notifies all clients (BAD) TODO check that it works.
+//                //When disturbance is reported it notifies all clients (BAD)
 //
 //            }
 //
